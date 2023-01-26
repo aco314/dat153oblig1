@@ -1,0 +1,22 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/databaseSortButton"
+        android:title="Sort by"
+        app:showAsAction="always">
+        <menu>
+            <item
+                android:title="Added"
+                android:id="@+id/sortByAdded">
+            </item>
+            <item
+                android:title="Alphabetically"
+                android:id="@+id/sortByAlpha">
+            </item>
+            <item
+                android:title="Reverse"
+                android:id="@+id/sortByReverse">
+            </item>
+        </menu>
+    </item>
+</menu>
