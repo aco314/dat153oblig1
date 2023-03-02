@@ -48,11 +48,7 @@ public class QuizCardsAdapter extends RecyclerView.Adapter<QuizCardsAdapter.View
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         QuizCard card = cards.get(position);
-        if (card.getImageLinkUri() == null) {
-            holder.cardImageView.setImageResource(card.getImageLinkInt());
-        } else {
-            holder.cardImageView.setImageURI(card.getImageLinkUri());
-        }
+        holder.cardImageView.setImageURI(card.getImageLinkUri());
         holder.textAlt1.setText(card.getCorrectAns());
         holder.textAlt2.setText(card.getWrongAns1());
         holder.textAlt3.setText(card.getWrongAns2());
@@ -63,7 +59,9 @@ public class QuizCardsAdapter extends RecyclerView.Adapter<QuizCardsAdapter.View
         return cards.size();
     }
 
-
+    public List<QuizCard> getData() {
+        return this.cards;
+    }
 
 
 }

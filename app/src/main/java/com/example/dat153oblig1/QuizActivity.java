@@ -1,15 +1,23 @@
 package com.example.dat153oblig1;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.example.dat153oblig1.database.QuizViewModel;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -26,15 +34,18 @@ public class QuizActivity extends AppCompatActivity {
     Button quizBackButton;
     Button playAgainButton;
 
-    ApplicationData appData;
-    boolean hardMode;
-    CountDownTimer timer;
-    QuizCard card;
+    private ApplicationData appData;
+    private QuizViewModel quizViewModel;
+    private boolean hardMode;
+    private CountDownTimer timer;
+    private QuizCard card;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_quiz);
+
+        //Log.i("aaa", this.getClass().getName());
 
         correctCounterTextView = (TextView) findViewById(R.id.correctCounterTextView);
         quizImageView = (ImageView) findViewById(R.id.quizImageView);
@@ -53,24 +64,31 @@ public class QuizActivity extends AppCompatActivity {
             startTimer();
         }
 
-        card = appData.getRandomCard();
-        if (card.getImageLinkUri() == null) {
-            quizImageView.setImageResource(card.getImageLinkInt());
-        } else {
+        //card = appData.getRandomCard();
+        quizViewModel = new ViewModelProvider(this).get(QuizViewModel.class);
+        quizViewModel.getAllQuizCards().observe(this, cards -> {
+
+            // Select random card
+            int index = (int)(Math.random() * cards.size());
+            card = cards.get(index);
+
             quizImageView.setImageURI(card.getImageLinkUri());
-        }
+
+            // Shuffle card alternatives
+            String[] alternatives = card.getAnswers().clone();
+            List<String> altsList = Arrays.asList(alternatives);
+            Collections.shuffle(altsList);
+            altsList.toArray(alternatives);
+
+            alt1Button.setText(alternatives[0]);
+            alt2Button.setText(alternatives[1]);
+            alt3Button.setText(alternatives[2]);
+        });
+
         String counterText = appData.getGamesWon() + " out of " + appData.getGamesPlayed() + " correct";
         correctCounterTextView.setText(counterText);
 
-        // Shuffle card alternatives
-        String[] alternatives = card.getAnswers().clone();
-        List<String> altsList = Arrays.asList(alternatives);
-        Collections.shuffle(altsList);
-        altsList.toArray(alternatives);
 
-        alt1Button.setText(alternatives[0]);
-        alt2Button.setText(alternatives[1]);
-        alt3Button.setText(alternatives[2]);
     }
 
     // "Back" button pressed (after round ended)
@@ -160,5 +178,10 @@ public class QuizActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         cancelTimer();
+    }
+
+    // Used for UI test
+    public QuizCard getCurrentCard() {
+        return card;
     }
 }

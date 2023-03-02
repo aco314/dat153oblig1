@@ -2,6 +2,7 @@ package com.example.dat153oblig1;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -14,10 +15,12 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.example.dat153oblig1.database.QuizViewModel;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -26,9 +29,9 @@ import java.util.Comparator;
 
 public class DatabaseActivity extends AppCompatActivity implements AddCardDialogFragment.AddCardDialogListener {
 
-    ApplicationData appData;
-    ArrayList<QuizCard> cards;
-    String sortedBy;
+    private ApplicationData appData;
+    QuizViewModel quizViewModel;
+    private String sortedBy;
 
     RecyclerView rView;
     FloatingActionButton databaseAddButton;
@@ -39,8 +42,8 @@ public class DatabaseActivity extends AppCompatActivity implements AddCardDialog
         setContentView(R.layout.activity_database);
 
         appData = ((ApplicationData) getApplicationContext());
-        cards = appData.getCards();
         sortedBy = "added";
+        quizViewModel = new ViewModelProvider(this).get(QuizViewModel.class);
 
         databaseAddButton = (FloatingActionButton) findViewById(R.id.databaseAddButton);
         databaseAddButton.setOnClickListener(new View.OnClickListener() {
@@ -67,7 +70,7 @@ public class DatabaseActivity extends AppCompatActivity implements AddCardDialog
     // "Add" button pressed in the "Add new card"-dialog
     @Override
     public void onDialogPositiveClick(QuizCard newCard) {
-        appData.addCard(newCard);
+        quizViewModel.insert(newCard);
         updateRView();
         Snackbar.make(rView, "Item Added!", Snackbar.LENGTH_LONG).show();
     }
@@ -103,23 +106,19 @@ public class DatabaseActivity extends AppCompatActivity implements AddCardDialog
 
     // Function to refresh the RecyclerView content, with the same sorting as in previous refresh
     private void updateRView() {
-        QuizCardsAdapter adapter;
-        switch (sortedBy) {
-            case "added":  // Added order
-                cards = appData.getCards();
-                break;
-            case "alpha":  // Sorted A-Z order
-                // Cloning list instead of using reference. Otherwise the original list will be changed
-                cards = new ArrayList<QuizCard>(appData.getCards());
+
+        quizViewModel.getAllQuizCards().observe(this, cards -> {
+
+            if (sortedBy.equals("alpha")) {
                 cards.sort(Comparator.comparing(QuizCard::getCorrectAns));
-                break;
-            case "reverse":  // Reversed Z-A order
-                cards = new ArrayList<QuizCard>(appData.getCards());
+            } else if (sortedBy.equals("reverse")) {
                 cards.sort(Comparator.comparing(QuizCard::getCorrectAns).reversed());
-                break;
-        }
-        adapter = new QuizCardsAdapter(cards);
-        rView.setAdapter(adapter);
+            }
+
+            QuizCardsAdapter adapter = new QuizCardsAdapter(cards);
+            rView.setAdapter(adapter);
+        });
+
     }
 
     // For swiping a RecyclerView item
@@ -132,10 +131,10 @@ public class DatabaseActivity extends AppCompatActivity implements AddCardDialog
         // Delete card after swiping it to left
         @Override
         public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+            int position = viewHolder.getAdapterPosition();
+            QuizCard deleted = ((QuizCardsAdapter) rView.getAdapter()).getData().get(position);
+            quizViewModel.delete(deleted);
             Snackbar.make(rView, "Item Deleted!", Snackbar.LENGTH_LONG).show();
-            QuizCard deleted = cards.get(viewHolder.getAdapterPosition());
-            appData.getCards().remove(deleted);
-            updateRView();
         }
 
         // Delete the card after swiping it 70% left of screen

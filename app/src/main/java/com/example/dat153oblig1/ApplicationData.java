@@ -6,10 +6,10 @@ import java.util.ArrayList;
 
 public class ApplicationData extends Application {
 
-    private ArrayList<QuizCard> cards = new ArrayList<>();
+    //private ArrayList<QuizCard> cards = new ArrayList<>();
     private int gamesPlayed = 0;
     private int gamesWon = 0;
-
+/*
     public void addCard(QuizCard card) {
         cards.add(card);
     }
@@ -22,6 +22,7 @@ public class ApplicationData extends Application {
         int index = (int)(Math.random() * cards.size());
         return cards.get(index);
     }
+ */
 
     public void gameWon() {
         this.gamesPlayed++;
